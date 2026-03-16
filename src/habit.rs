@@ -112,8 +112,6 @@ pub enum HabitError {
     HabitNotFound(String),
     DuplicateHabit(String),
     DuplicateCompletion(String),
-    IoError(std::io::Error),
-    ParseError(serde_json::Error),
 }
 
 impl std::error::Error for HabitError {}
@@ -130,25 +128,7 @@ impl Display for HabitError {
             Self::DuplicateHabit(habit) => {
                 write!(f, "{} already exists", habit)
             }
-            Self::IoError(error) => {
-                write!(f, "Error: {}", error)
-            }
-            Self::ParseError(error) => {
-                write!(f, "Error parsing: {}", error)
-            }
         }
-    }
-}
-
-impl From<std::io::Error> for HabitError {
-    fn from(error: std::io::Error) -> Self {
-        HabitError::IoError(error)
-    }
-}
-
-impl From<serde_json::Error> for HabitError {
-    fn from(value: serde_json::Error) -> Self {
-        HabitError::ParseError(value)
     }
 }
 
