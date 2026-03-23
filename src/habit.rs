@@ -1,7 +1,6 @@
-use std::fmt::Display;
-
 use chrono::{Duration, Local, NaiveDate};
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HabitStore {
@@ -9,20 +8,6 @@ pub struct HabitStore {
 }
 
 impl HabitStore {
-    pub fn list_habits(&self) -> Vec<String> {
-        let today: NaiveDate = Local::now().date_naive();
-        let mut habit_streaks: Vec<String> = vec![];
-
-        for habit in &self.habits {
-            let streak = habit.calculate_streak(today);
-            let habit_name = &habit.name;
-            let habit_string = format!("{habit_name}: {streak} day streak");
-            habit_streaks.push(habit_string);
-        }
-
-        habit_streaks
-    }
-
     pub fn add_habit(&mut self, habit_name: &str) -> Result<(), HabitError> {
         if self.habits.iter().any(|h| h.name == habit_name) {
             return Err(HabitError::DuplicateHabit(habit_name.to_owned()));
@@ -68,7 +53,8 @@ impl Habit {
 
     /// Calculates the current streak of consecutive daily completions
     /// Returns 0 if the habit was not completed today or yesterday
-    pub fn calculate_streak(&self, today: NaiveDate) -> u32 {
+    pub fn calculate_streak(&self) -> u32 {
+        let today: NaiveDate = Local::now().date_naive();
         let mut streak: u32 = 0;
 
         let mut sorted_completion_dates = self.completions.to_vec();
@@ -107,29 +93,14 @@ impl Habit {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum HabitError {
+    #[error("Habit '{0}' not found")]
     HabitNotFound(String),
+    #[error("Habit '{0}' already exists")]
     DuplicateHabit(String),
+    #[error("Habit '{0}' already completed for today")]
     DuplicateCompletion(String),
-}
-
-impl std::error::Error for HabitError {}
-
-impl Display for HabitError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::HabitNotFound(habit) => {
-                write!(f, "Habit '{}' not found", habit)
-            }
-            Self::DuplicateCompletion(habit) => {
-                write!(f, "{} already completed for today", habit)
-            }
-            Self::DuplicateHabit(habit) => {
-                write!(f, "{} already exists", habit)
-            }
-        }
-    }
 }
 
 #[cfg(test)]
@@ -149,7 +120,7 @@ mod tests {
             name: "exercise".to_string(),
         };
 
-        let streak = habit.calculate_streak(today);
+        let streak = habit.calculate_streak();
         assert_eq!(streak, 0);
     }
 
@@ -163,7 +134,7 @@ mod tests {
             name: "exercise".to_string(),
         };
 
-        let streak = habit.calculate_streak(today);
+        let streak = habit.calculate_streak();
         assert_eq!(streak, 1);
     }
 
@@ -177,7 +148,7 @@ mod tests {
             name: "exercise".to_string(),
         };
 
-        let streak = habit.calculate_streak(today);
+        let streak = habit.calculate_streak();
         assert_eq!(streak, 2);
     }
 
@@ -229,28 +200,5 @@ mod tests {
 
         assert_eq!(habit.completions.len(), 1);
         assert_eq!(habit.completions[0], today);
-    }
-
-    #[test]
-    fn test_list_habits() {
-        let today: NaiveDate = Local::now().date_naive();
-        let yesterday = today.pred_opt().unwrap();
-
-        let habit_one = Habit {
-            name: "exercise".to_string(),
-            completions: vec![yesterday, today],
-        };
-        let habit_two = Habit {
-            name: "floss".to_string(),
-            completions: vec![],
-        };
-        let habit_store = HabitStore {
-            habits: vec![habit_one, habit_two],
-        };
-
-        let habit_streaks = habit_store.list_habits();
-        assert_eq!(habit_streaks.len(), 2);
-        assert_eq!(habit_streaks[0], "exercise: 2 day streak");
-        assert_eq!(habit_streaks[1], "floss: 0 day streak");
     }
 }

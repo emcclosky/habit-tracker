@@ -1,73 +1,61 @@
-# Habit Tracker
+# Habit Tracker API
 
-A small command-line application written in Rust to help you track daily habits and streaks.
+A small REST API for tracking daily habits and streaks, built with Rust and Axum.
 
-## 🛠️ Features
+## Prerequisites
 
-- Store habits in a JSON file (`habits.json`)
-- Add, list, and mark habits as complete from the terminal
-- Track consecutive day streaks per habit
-- Simple design for learning Rust
+- Rust (latest stable)
+- Cargo
 
-## 🚀 Getting Started
-
-1. **Build & Install**
-
-   ```sh
-   cargo build --release
-   # optionally install to your PATH:
-   cargo install --path .
-   ```
-
-2. **Run**
-
-   ```sh
-   cargo run -- <command> [args]
-   # or if installed:
-   habit-tracker <command> [args]
-   ```
-
-## 📋 Commands
-
-| Command | Description |
-|---|---|
-| `add <name>` | Add a new habit |
-| `list` | List all habits and their current streaks |
-| `complete <name>` | Mark a habit as complete for today |
-
-### Examples
+## Run locally
 
 ```sh
-cargo run -- add "Exercise"
-cargo run -- add "Read"
-cargo run -- list
-cargo run -- complete "Exercise"
+cargo run
 ```
 
-**Example output for `list`:**
+Server URL: `http://127.0.0.1:8080`
 
+## API endpoints
+
+### List habits
+
+```sh
+curl http://127.0.0.1:8080/habits
 ```
-Exercise: 3 day streak
-Read: 0 day streak
+
+### Add habit
+
+```sh
+curl -X POST http://127.0.0.1:8080/habits \
+  -H "Content-Type: application/json" \
+  -d '{"name": "exercise"}'
 ```
 
-## 🔢 Streak Calculation
+### Complete habit
 
-A streak counts consecutive days a habit was completed. It remains active if you completed the habit **today or yesterday** — missing two or more days resets it to zero.
+```sh
+curl -X POST http://127.0.0.1:8080/habits/exercise/completions
+```
 
-## 📁 Project Structure
+## Data storage
 
-| File | Purpose |
-|---|---|
-| `main.rs` | Entry point, argument parsing, error handling |
-| `command.rs` | CLI command definitions (via clap) |
-| `habit.rs` | Habit model, streak logic, error types |
-| `storage.rs` | JSON persistence (`habits.json`) |
+Habits are persisted to `habits.json` in the project root.
 
-## 💾 Habits File
+This is temporary storage for the learning/WIP phase.
 
-Habits are stored in `habits.json` in the project root. The file is created automatically on first use. You can inspect or edit it manually if desired — it uses a straightforward JSON structure.
+## Tests
 
-## 📘 Notes
+```sh
+cargo test
+```
 
-This project is part of a Rust learning exercise and is intentionally lightweight and straightforward.
+## Project status
+
+This is a work in progress / learning project, so API shape and behavior may change.
+
+## Current limitations
+
+- File-based JSON storage is simple but not ideal for scaling, multi-process access, or richer querying.
+- If `habits.json` is manually edited into invalid JSON, the API cannot load habits.
+- The completion endpoint uses habit names in the URL path (`/habits/{name}/completions`).
+- Names with spaces or special characters must be URL-encoded (for example, `walk%20the%20dog`).

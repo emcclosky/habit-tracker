@@ -1,7 +1,11 @@
-use std::fmt::Display;
+use std::sync::{Arc, RwLock};
 use std::{fs, path::PathBuf};
 
+use thiserror::Error;
+
 use crate::habit::HabitStore;
+
+pub type SharedState = Arc<RwLock<Storage>>;
 
 pub struct Storage {
     file_path: PathBuf,
@@ -9,7 +13,7 @@ pub struct Storage {
 
 impl Storage {
     pub fn new(file_path: PathBuf) -> Self {
-        Storage { file_path }
+        Self { file_path }
     }
     pub fn load_habits(&self) -> Result<HabitStore, StorageError> {
         if self.file_path.exists() {
@@ -28,37 +32,12 @@ impl Storage {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum StorageError {
-    IoError(std::io::Error),
-    ParseError(serde_json::Error),
-}
-
-impl std::error::Error for StorageError {}
-
-impl Display for StorageError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::IoError(error) => {
-                write!(f, "Error: {}", error)
-            }
-            Self::ParseError(error) => {
-                write!(f, "Error parsing: {}", error)
-            }
-        }
-    }
-}
-
-impl From<std::io::Error> for StorageError {
-    fn from(error: std::io::Error) -> Self {
-        StorageError::IoError(error)
-    }
-}
-
-impl From<serde_json::Error> for StorageError {
-    fn from(value: serde_json::Error) -> Self {
-        StorageError::ParseError(value)
-    }
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("Parse error: {0}")]
+    ParseError(#[from] serde_json::Error),
 }
 
 #[cfg(test)]
@@ -100,11 +79,11 @@ mod tests {
 
     #[test]
     fn test_load_habits_returns_error_on_malformed_json() {
+        use std::io::Write;
+
         let mut file = NamedTempFile::new().unwrap();
         let path = file.path().to_path_buf();
         let storage = Storage::new(path);
-
-        use std::io::Write;
 
         write!(file, "not valid json {{{{").unwrap();
 
