@@ -46,8 +46,9 @@ pub async fn complete_habit(
     State(shared_state): State<SharedState>,
     Path(name): Path<String>,
 ) -> Result<impl IntoResponse, AppError> {
+    let name = name.trim().to_string();
     let storage = shared_state.write().expect("habit store lock was poisoned");
-
     let habit_response = service::complete_habit(&storage, &name)?;
+
     Ok((StatusCode::OK, Json(habit_response)))
 }
