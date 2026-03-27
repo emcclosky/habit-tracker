@@ -89,10 +89,7 @@ async fn test_add_new_habit() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(
-        body,
-        json!([{"name": "exercise", "streak": 1}, {"name": "floss", "streak": 0}])
-    );
+    assert_eq!(body, json!( {"name": "floss", "streak": 0}));
 }
 
 #[tokio::test]

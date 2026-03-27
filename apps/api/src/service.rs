@@ -31,14 +31,16 @@ pub fn list_habits(storage: &Storage) -> Result<Vec<HabitResponse>, AppError> {
     Ok(habit_response)
 }
 
-pub fn add_habit(storage: &Storage, name: &str) -> Result<Vec<HabitResponse>, AppError> {
+pub fn add_habit(storage: &Storage, name: &str) -> Result<HabitResponse, AppError> {
     let mut habit_store = storage.load_habits()?;
 
     habit_store.add_habit(name)?;
     storage.save_habits(&habit_store)?;
 
-    let habit_response = to_habit_response(&habit_store);
-    Ok(habit_response)
+    Ok(HabitResponse {
+        name: name.to_string(),
+        streak: 0,
+    })
 }
 
 pub fn complete_habit(storage: &Storage, name: &str) -> Result<HabitResponse, AppError> {
