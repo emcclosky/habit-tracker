@@ -1,3 +1,4 @@
+use chrono::{Local, NaiveDate};
 use serde::Serialize;
 
 use crate::error::AppError;
@@ -11,12 +12,14 @@ pub struct HabitResponse {
 }
 
 fn to_habit_response(habit_store: &HabitStore) -> Vec<HabitResponse> {
+    let today: NaiveDate = Local::now().date_naive();
+
     habit_store
         .habits
         .iter()
         .map(|h| HabitResponse {
             name: h.name.clone(),
-            streak: h.calculate_streak(),
+            streak: h.calculate_streak(today),
         })
         .collect()
 }
@@ -40,18 +43,15 @@ pub fn add_habit(storage: &Storage, name: &str) -> Result<Vec<HabitResponse>, Ap
 
 pub fn complete_habit(storage: &Storage, name: &str) -> Result<HabitResponse, AppError> {
     let mut habit_store = storage.load_habits()?;
-    habit_store.complete_habit(name)?;
-    storage.save_habits(&habit_store)?;
+    let today: NaiveDate = Local::now().date_naive();
 
+    let habit = habit_store.complete_habit(name)?;
     let habit_response = HabitResponse {
-        name: name.to_string(),
-        streak: habit_store
-            .habits
-            .iter()
-            .find(|h| h.name == name)
-            .map(|h| h.calculate_streak())
-            .unwrap_or(0),
+        name: habit.name.clone(),
+        streak: habit.calculate_streak(today),
     };
+
+    storage.save_habits(&habit_store)?;
 
     Ok(habit_response)
 }

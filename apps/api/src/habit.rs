@@ -22,7 +22,7 @@ impl HabitStore {
         Ok(())
     }
 
-    pub fn complete_habit(&mut self, habit_name: &str) -> Result<(), HabitError> {
+    pub fn complete_habit(&mut self, habit_name: &str) -> Result<&mut Habit, HabitError> {
         let today: NaiveDate = Local::now().date_naive();
         let habit = self
             .habits
@@ -36,7 +36,7 @@ impl HabitStore {
 
         habit.add_completion(today);
 
-        Ok(())
+        Ok(habit)
     }
 }
 
@@ -53,23 +53,23 @@ impl Habit {
 
     /// Calculates the current streak of consecutive daily completions
     /// Returns 0 if the habit was not completed today or yesterday
-    pub fn calculate_streak(&self) -> u32 {
-        let today: NaiveDate = Local::now().date_naive();
+    pub fn calculate_streak(&self, completion_date: NaiveDate) -> u32 {
         let mut streak: u32 = 0;
 
         let mut sorted_completion_dates = self.completions.to_vec();
         sorted_completion_dates.sort_by(|a, b| b.cmp(a)); // descending: most recent first
+        sorted_completion_dates.dedup(); // remove duplicate entries for the same day
 
         for (i, &date) in sorted_completion_dates.iter().enumerate() {
             if i == 0 {
                 // A streak is only valid if it completed today or yesterday.
                 // Completing it two days ago (no entry since) means the streak is broken.
-                let is_recent = if let Some(yesterday) = today.pred_opt() {
-                    date == today || date == yesterday
+                let is_recent = if let Some(yesterday) = completion_date.pred_opt() {
+                    date == completion_date || date == yesterday
                 } else {
                     // Edge case: today is the minimum possible date
                     // Only valid if completed today
-                    date == today
+                    date == completion_date
                 };
 
                 if !is_recent {
@@ -120,7 +120,7 @@ mod tests {
             name: "exercise".to_string(),
         };
 
-        let streak = habit.calculate_streak();
+        let streak = habit.calculate_streak(today);
         assert_eq!(streak, 0);
     }
 
@@ -134,7 +134,7 @@ mod tests {
             name: "exercise".to_string(),
         };
 
-        let streak = habit.calculate_streak();
+        let streak = habit.calculate_streak(today);
         assert_eq!(streak, 1);
     }
 
@@ -148,7 +148,7 @@ mod tests {
             name: "exercise".to_string(),
         };
 
-        let streak = habit.calculate_streak();
+        let streak = habit.calculate_streak(today);
         assert_eq!(streak, 2);
     }
 
