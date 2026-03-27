@@ -1,0 +1,22 @@
+{
+  "name": "api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "@monodon/rust:build",
+      "options": {}
+    },
+    "serve": {
+      "executor": "@monodon/rust:run",
+      "options": {}
+    },
+    "test": {
+      "executor": "@monodon/rust:test",
+      "options": {}
+    },
+    "lint": {
+      "executor": "@monodon/rust:clippy",
+      "options": {}
+    }
+  }
+}

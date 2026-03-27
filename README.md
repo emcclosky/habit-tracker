@@ -1,61 +1,39 @@
-# Habit Tracker API
+# habit-tracker
 
-A small REST API for tracking daily habits and streaks, built with Rust and Axum.
+A full-stack habit tracking application. Track daily habits and streaks via a REST API, with a web frontend coming soon.
+
+## Structure
+```
+apps/
+  api/     # Rust/Axum REST API
+```
 
 ## Prerequisites
 
-- Rust (latest stable)
-- Cargo
+- Rust (latest stable, edition 2024)
+- Node.js + pnpm
 
-## Run locally
-
+Install Node dependencies:
 ```sh
-cargo run
+pnpm install
 ```
 
-Server URL: `http://127.0.0.1:8080`
+## Development
 
-## API endpoints
-
-### List habits
-
+Run all services:
 ```sh
-curl http://127.0.0.1:8080/habits
+pnpm dev
 ```
 
-### Add habit
+By default the API listens on `http://127.0.0.1:8080`.
 
-```sh
-curl -X POST http://127.0.0.1:8080/habits \
-  -H "Content-Type: application/json" \
-  -d '{"name": "exercise"}'
-```
+See [`apps/api/README.md`](apps/api/README.md) for API-specific commands and documentation.
 
-### Complete habit
+## Notes
 
-```sh
-curl -X POST http://127.0.0.1:8080/habits/exercise/completions
-```
-
-## Data storage
-
-Habits are persisted to `habits.json` in the project root.
-
-This is temporary storage for the learning/WIP phase.
-
-## Tests
-
-```sh
-cargo test
-```
+- Logging is controlled via `RUST_LOG`
+- Habits are persisted to a local `habits.json` file during this phase — Postgres is planned
 
 ## Project status
 
-This is a work in progress / learning project, so API shape and behavior may change.
-
-## Current limitations
-
-- File-based JSON storage is simple but not ideal for scaling, multi-process access, or richer querying.
-- If `habits.json` is manually edited into invalid JSON, the API cannot load habits.
-- The completion endpoint uses habit names in the URL path (`/habits/{name}/completions`).
-- Names with spaces or special characters must be URL-encoded (for example, `walk%20the%20dog`).
+In active development. Postgres storage and a Next.js frontend are planned.

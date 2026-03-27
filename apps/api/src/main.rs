@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
-use habit_tracker::storage::Storage;
+use api::storage::Storage;
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -18,7 +18,7 @@ async fn main() {
     let storage = Storage::new(PathBuf::from("habits.json"));
     let shared_state = Arc::new(RwLock::new(storage));
 
-    let app = habit_tracker::app(shared_state);
+    let app = api::app(shared_state);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
         .await

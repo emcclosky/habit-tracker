@@ -10,8 +10,8 @@ use std::sync::{Arc, RwLock};
 use tempfile::NamedTempFile;
 use tower::ServiceExt;
 
-use habit_tracker::habit::{Habit, HabitError, HabitStore};
-use habit_tracker::storage::Storage;
+use api::habit::{Habit, HabitError, HabitStore};
+use api::storage::Storage;
 
 async fn setup_app(habits: Vec<Habit>) -> (Router, NamedTempFile) {
     let file = NamedTempFile::new().unwrap();
@@ -20,7 +20,7 @@ async fn setup_app(habits: Vec<Habit>) -> (Router, NamedTempFile) {
 
     storage.save_habits(&store).unwrap();
     let shared_state = Arc::new(RwLock::new(storage));
-    (habit_tracker::app(shared_state), file)
+    (api::app(shared_state), file)
 }
 
 #[tokio::test]
