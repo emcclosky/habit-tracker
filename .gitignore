@@ -19,6 +19,7 @@ coverage/
 
 # Test outputs
 test-output/
+vitest.config.*.timestamp*
 
 # TypeScript
 *.tsbuildinfo
