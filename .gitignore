@@ -1,6 +1,41 @@
-
-.nx/installation
+# Nx
 .nx/cache
+.nx/installation
 .nx/workspace-data
 
+# Rust
 /target
+
+# Next.js
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+coverage/
+
+# Test outputs
+test-output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# Environment and secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
