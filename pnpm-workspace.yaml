@@ -1,8 +1,8 @@
 packages:
-  - apps/*
-  - libs/*
-
+  - "apps/*"
+  - "libs/*"
+  - "packages/*"
 onlyBuiltDependencies:
-  - '@swc/core'
-  - nx
-  - unrs-resolver
+  - "@swc/core"
+  - "nx"
+  - "unrs-resolver"
