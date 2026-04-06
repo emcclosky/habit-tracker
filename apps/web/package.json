@@ -1,24 +1,24 @@
 {
-	"name": "@habit-tracker/web",
-	"version": "0.0.1",
-	"private": true,
-	"dependencies": {
-		"@habit-tracker/shared": "workspace:*",
-		"next": "~16.1.6",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0"
-	},
-	"nx": {
-		"targets": {
-			"test": {
-				"executor": "@nx/vitest:test",
-				"outputs": [
-					"{options.reportsDirectory}"
-				],
-				"options": {
-					"reportsDirectory": "coverage/apps/web"
-				}
-			}
-		}
-	}
+  "name": "@habit-tracker/web",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@habit-tracker/shared": "workspace:*",
+    "next": "~16.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "nx": {
+    "targets": {
+      "test": {
+        "executor": "@nx/vitest:test",
+        "outputs": [
+          "{options.reportsDirectory}"
+        ],
+        "options": {
+          "reportsDirectory": "coverage/apps/web"
+        }
+      }
+    }
+  }
 }

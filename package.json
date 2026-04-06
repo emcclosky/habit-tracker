@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nx run-many --targets=serve,dev --projects=api,web --parallel"
+    "dev": "nx run-many --targets=serve,dev --projects=api,web --parallel",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -42,9 +43,12 @@
     "eslint-plugin-playwright": "^1.6.2",
     "eslint-plugin-react": "7.35.0",
     "eslint-plugin-react-hooks": "5.0.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.1.0",
     "jsonc-eslint-parser": "^2.1.0",
+    "lint-staged": "^16.4.0",
     "postcss": "8.4.38",
+    "prettier": "^3.8.1",
     "tailwindcss": "3.4.3",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
@@ -56,5 +60,10 @@
     "next": "~16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx,json,css,md}": [
+      "prettier --write"
+    ]
   }
 }

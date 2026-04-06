@@ -3,6 +3,7 @@
 A full-stack habit tracking application. Track daily habits and streaks via a REST API, with a web frontend coming soon.
 
 ## Structure
+
 ```
 apps/
   api/     # Rust/Axum REST API
@@ -14,6 +15,7 @@ apps/
 - Node.js + pnpm
 
 Install Node dependencies:
+
 ```sh
 pnpm install
 ```
@@ -21,6 +23,7 @@ pnpm install
 ## Development
 
 Run all services:
+
 ```sh
 pnpm dev
 ```

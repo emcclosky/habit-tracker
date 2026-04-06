@@ -1,10 +1,10 @@
 {
-	"name": "@habit-tracker/web-e2e",
-	"version": "0.0.1",
-	"private": true,
-	"nx": {
-		"implicitDependencies": [
-			"web"
-		]
-	}
+  "name": "@habit-tracker/web-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "web"
+    ]
+  }
 }

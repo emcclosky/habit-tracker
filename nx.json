@@ -58,15 +58,7 @@
   "targetDefaults": {
     "@nx/vitest:test": {
       "cache": true,
-      "inputs": [
-        "default",
-        "^default"
-      ]
-    },
-    "test": {
-      "dependsOn": [
-        "^build"
-      ]
+      "inputs": ["default", "^default"]
     }
   },
   "generators": {

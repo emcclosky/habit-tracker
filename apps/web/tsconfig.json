@@ -1,48 +1,48 @@
 {
-	"extends": "../../tsconfig.base.json",
-	"compilerOptions": {
-		"jsx": "preserve",
-		"jsxImportSource": "react",
-		"noEmit": true,
-		"emitDeclarationOnly": false,
-		"esModuleInterop": true,
-		"resolveJsonModule": true,
-		"lib": ["dom", "dom.iterable", "esnext"],
-		"allowJs": true,
-		"allowSyntheticDefaultImports": true,
-		"forceConsistentCasingInFileNames": true,
-		"incremental": true,
-		"plugins": [
-			{
-				"name": "next"
-			}
-		],
-		"paths": {
-			"@/*": ["./src/*"]
-		},
-		"outDir": "dist",
-		"tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
-	},
-	"include": [
-		"src/**/*.ts",
-		"src/**/*.tsx",
-		"src/**/*.js",
-		"src/**/*.jsx",
-		"../../apps/web/.next/types/**/*.ts",
-		"../../dist/apps/web/.next/types/**/*.ts",
-		"next-env.d.ts",
-		"index.d.ts"
-	],
-	"exclude": [
-		"out-tsc",
-		"dist",
-		"node_modules",
-		"src/**/*.spec.ts",
-		"src/**/*.test.ts",
-		".next",
-		"eslint.config.js",
-		"eslint.config.cjs",
-		"eslint.config.mjs"
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "react",
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "../../apps/web/.next/types/**/*.ts",
+    "../../dist/apps/web/.next/types/**/*.ts",
+    "next-env.d.ts",
+    "index.d.ts"
+  ],
+  "exclude": [
+    "out-tsc",
+    "dist",
+    "node_modules",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    ".next",
+    "eslint.config.js",
+    "eslint.config.cjs",
+    "eslint.config.mjs"
   ],
   "references": [
     {
