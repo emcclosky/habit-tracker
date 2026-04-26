@@ -49,11 +49,31 @@ pub fn add_habit(storage: &Storage, name: &str) -> Result<HabitResponse, AppErro
     Ok(habit_response)
 }
 
-pub fn complete_habit(storage: &Storage, name: &str) -> Result<HabitResponse, AppError> {
+pub fn complete_habit(
+    storage: &Storage,
+    name: &str,
+    date: NaiveDate,
+) -> Result<HabitResponse, AppError> {
     let mut habit_store = storage.load_habits()?;
     let today: NaiveDate = Local::now().date_naive();
 
-    let habit = habit_store.complete_habit(name)?;
+    let habit = habit_store.complete_habit(name, date)?;
+    let habit_response = build_habit_response(habit, today);
+
+    storage.save_habits(&habit_store)?;
+
+    Ok(habit_response)
+}
+
+pub fn delete_completion(
+    storage: &Storage,
+    name: &str,
+    date: NaiveDate,
+) -> Result<HabitResponse, AppError> {
+    let mut habit_store = storage.load_habits()?;
+    let today: NaiveDate = Local::now().date_naive();
+
+    let habit = habit_store.delete_completion(name, date)?;
     let habit_response = build_habit_response(habit, today);
 
     storage.save_habits(&habit_store)?;

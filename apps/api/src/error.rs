@@ -34,6 +34,9 @@ impl IntoResponse for AppError {
             AppError::Habit(HabitError::DuplicateCompletion(_)) => {
                 (StatusCode::CONFLICT, self.to_string())
             }
+            AppError::Habit(HabitError::CompletionNotFound(_)) => {
+                (StatusCode::NOT_FOUND, self.to_string())
+            }
             AppError::InvalidJson(_) => {
                 (StatusCode::BAD_REQUEST, "invalid request body".to_string())
             }

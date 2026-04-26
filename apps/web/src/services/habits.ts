@@ -9,7 +9,12 @@ export const createHabit = (name: string) =>
     body: JSON.stringify({ name }),
   });
 
-export const completeHabit = (name: string) =>
-  apiFetch<Habit>(`/habits/${encodeURIComponent(name)}/completions`, {
+export const completeHabit = (name: string, date: string) =>
+  apiFetch<Habit>(`/habits/${encodeURIComponent(name)}/completions/${date}`, {
     method: 'POST',
+  });
+
+export const deleteCompletion = (name: string, date: string) =>
+  apiFetch<Habit>(`/habits/${encodeURIComponent(name)}/completions/${date}`, {
+    method: 'DELETE',
   });

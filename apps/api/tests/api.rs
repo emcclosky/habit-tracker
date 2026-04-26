@@ -137,8 +137,10 @@ async fn test_duplicate_habit_returns_conflict() {
 }
 
 #[tokio::test]
-async fn test_complete_habit() {
-    let today: NaiveDate = Local::now().date_naive();
+async fn test_complete_habit_records_completion() {
+    let today = Local::now().date_naive();
+    let today_str = today.format("%Y-%m-%d").to_string();
+
     let habits = vec![Habit {
         name: "exercise".to_string(),
         completions: vec![],
@@ -147,7 +149,7 @@ async fn test_complete_habit() {
 
     let response = app
         .oneshot(
-            Request::post("/habits/exercise/completions")
+            Request::post(format!("/habits/exercise/completions/{}", today_str))
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -158,8 +160,6 @@ async fn test_complete_habit() {
 
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
-
-    let today_str = today.format("%Y-%m-%d").to_string();
 
     assert_eq!(body["name"].as_str().unwrap(), "exercise");
     assert_eq!(body["streak"].as_u64().unwrap(), 1);
@@ -196,13 +196,74 @@ async fn test_get_habits_returns_empty_completions() {
 }
 
 #[tokio::test]
-async fn test_complete_non_existent_habit() {
+async fn test_delete_completion_removes_completion() {
+    let today = Local::now().date_naive();
+    let today_str = today.format("%Y-%m-%d").to_string();
+
+    let habits = vec![Habit {
+        name: "exercise".to_string(),
+        completions: vec![today],
+    }];
+    let (app, _file) = setup_app(habits).await;
+
+    let response = app
+        .oneshot(
+            Request::delete(format!("/habits/exercise/completions/{}", today_str))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Value = serde_json::from_slice(&body).unwrap();
+
+    assert_eq!(body["name"].as_str().unwrap(), "exercise");
+    assert_eq!(body["streak"].as_u64().unwrap(), 0);
+    assert!(body["completions"].as_array().unwrap().is_empty());
+}
+
+#[tokio::test]
+async fn test_delete_completion_not_found() {
+    let today = Local::now().date_naive();
+    let today_str = today.format("%Y-%m-%d").to_string();
+
+    let habits = vec![Habit {
+        name: "exercise".to_string(),
+        completions: vec![],
+    }];
+    let (app, _file) = setup_app(habits).await;
+
+    let response = app
+        .oneshot(
+            Request::delete(format!("/habits/exercise/completions/{}", today_str))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Value = serde_json::from_slice(&body).unwrap();
+
+    let expected_message = HabitError::CompletionNotFound(today_str).to_string();
+    assert_eq!(body["message"].as_str().unwrap(), expected_message);
+}
+
+#[tokio::test]
+async fn test_complete_habit_not_found() {
+    let today = Local::now().date_naive();
+    let today_str = today.format("%Y-%m-%d").to_string();
     let habits = vec![];
     let (app, _file) = setup_app(habits).await;
 
     let response = app
         .oneshot(
-            Request::post("/habits/exercise/completions")
+            Request::post(format!("/habits/exercise/completions/{}", today_str))
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -219,8 +280,34 @@ async fn test_complete_non_existent_habit() {
 }
 
 #[tokio::test]
-async fn test_complete_habit_twice_returns_error() {
+async fn test_delete_completion_habit_not_found() {
+    let today = Local::now().date_naive();
+    let today_str = today.format("%Y-%m-%d").to_string();
+    let habits = vec![];
+    let (app, _file) = setup_app(habits).await;
+
+    let response = app
+        .oneshot(
+            Request::delete(format!("/habits/exercise/completions/{}", today_str))
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Value = serde_json::from_slice(&body).unwrap();
+
+    let expected_message = HabitError::HabitNotFound("exercise".to_string()).to_string();
+    assert_eq!(body["message"].as_str().unwrap(), expected_message);
+}
+
+#[tokio::test]
+async fn test_complete_habit_duplicate_returns_conflict() {
     let today: NaiveDate = Local::now().date_naive();
+    let today_str = today.format("%Y-%m-%d").to_string();
     let habits = vec![Habit {
         name: "exercise".to_string(),
         completions: vec![today],
@@ -230,7 +317,7 @@ async fn test_complete_habit_twice_returns_error() {
 
     let response = app
         .oneshot(
-            Request::post("/habits/exercise/completions")
+            Request::post(format!("/habits/exercise/completions/{}", today_str))
                 .body(Body::empty())
                 .unwrap(),
         )

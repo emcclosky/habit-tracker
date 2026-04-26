@@ -1,4 +1,4 @@
-use chrono::{Duration, Local, NaiveDate};
+use chrono::{Duration, NaiveDate};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -24,19 +24,38 @@ impl HabitStore {
             .expect("habits vec cannot be empty after push"))
     }
 
-    pub fn complete_habit(&mut self, habit_name: &str) -> Result<&mut Habit, HabitError> {
-        let today: NaiveDate = Local::now().date_naive();
+    pub fn complete_habit(
+        &mut self,
+        habit_name: &str,
+        completion_date: NaiveDate,
+    ) -> Result<&mut Habit, HabitError> {
         let habit = self
             .habits
             .iter_mut()
             .find(|h| h.name == habit_name)
             .ok_or_else(|| HabitError::HabitNotFound(habit_name.to_owned()))?;
 
-        if habit.completions.contains(&today) {
+        if habit.completions.contains(&completion_date) {
             return Err(HabitError::DuplicateCompletion(habit_name.to_owned()));
         }
 
-        habit.add_completion(today);
+        habit.add_completion(completion_date);
+
+        Ok(habit)
+    }
+
+    pub fn delete_completion(
+        &mut self,
+        habit_name: &str,
+        completion_date: NaiveDate,
+    ) -> Result<&mut Habit, HabitError> {
+        let habit = self
+            .habits
+            .iter_mut()
+            .find(|h| h.name == habit_name)
+            .ok_or_else(|| HabitError::HabitNotFound(habit_name.to_owned()))?;
+
+        habit.remove_completion(completion_date)?;
 
         Ok(habit)
     }
@@ -51,6 +70,18 @@ pub struct Habit {
 impl Habit {
     pub fn add_completion(&mut self, completion_date: NaiveDate) {
         self.completions.push(completion_date);
+    }
+
+    pub fn remove_completion(&mut self, completion_date: NaiveDate) -> Result<(), HabitError> {
+        let index = self
+            .completions
+            .iter()
+            .position(|&d| d == completion_date)
+            .ok_or_else(|| HabitError::CompletionNotFound(completion_date.to_string()))?;
+
+        self.completions.remove(index);
+
+        Ok(())
     }
 
     /// Calculates the current streak of consecutive daily completions
@@ -101,13 +132,15 @@ pub enum HabitError {
     HabitNotFound(String),
     #[error("Habit '{0}' already exists")]
     DuplicateHabit(String),
-    #[error("Habit '{0}' already completed for today")]
+    #[error("Habit '{0}' already has a completion for that date")]
     DuplicateCompletion(String),
+    #[error("Completion '{0}' not found")]
+    CompletionNotFound(String),
 }
 
 #[cfg(test)]
 mod tests {
-    use chrono::Days;
+    use chrono::{Days, Local};
 
     use super::*;
 
@@ -190,17 +223,88 @@ mod tests {
     }
 
     #[test]
-    fn test_add_completion() {
+    fn test_remove_completion_returns_error_when_habit_not_found() {
         let today: NaiveDate = Local::now().date_naive();
 
-        let mut habit = Habit {
+        let mut habit_store = HabitStore { habits: vec![] };
+
+        let result = habit_store.delete_completion("exercise", today);
+
+        assert!(matches!(result, Err(HabitError::HabitNotFound(_))));
+    }
+
+    #[test]
+    fn test_complete_habit() {
+        let today: NaiveDate = Local::now().date_naive();
+
+        let habit = Habit {
             name: "exercise".to_string(),
             completions: vec![],
         };
 
-        habit.add_completion(today);
+        let mut habit_store = HabitStore {
+            habits: vec![habit],
+        };
 
-        assert_eq!(habit.completions.len(), 1);
-        assert_eq!(habit.completions[0], today);
+        let result = habit_store.complete_habit("exercise", today).unwrap();
+
+        assert_eq!(result.completions.len(), 1);
+        assert_eq!(result.completions[0], today);
+    }
+
+    #[test]
+    fn test_complete_habit_returns_error_on_duplicate() {
+        let today: NaiveDate = Local::now().date_naive();
+
+        let habit = Habit {
+            name: "exercise".to_string(),
+            completions: vec![today],
+        };
+
+        let mut habit_store = HabitStore {
+            habits: vec![habit],
+        };
+
+        let result = habit_store.complete_habit("exercise", today);
+
+        assert!(matches!(result, Err(HabitError::DuplicateCompletion(_))));
+    }
+
+    #[test]
+    fn test_remove_completion() {
+        let today: NaiveDate = Local::now().date_naive();
+        let yesterday = today.pred_opt().unwrap();
+
+        let habit = Habit {
+            completions: vec![yesterday, today],
+            name: "exercise".to_string(),
+        };
+
+        let mut habit_store = HabitStore {
+            habits: vec![habit],
+        };
+
+        let result = habit_store.delete_completion("exercise", today).unwrap();
+
+        assert!(!result.completions.contains(&today));
+        assert!(result.completions.contains(&yesterday));
+    }
+
+    #[test]
+    fn test_remove_completion_returns_error_when_no_completion_exists() {
+        let today: NaiveDate = Local::now().date_naive();
+
+        let habit = Habit {
+            completions: vec![],
+            name: "exercise".to_string(),
+        };
+
+        let mut habit_store = HabitStore {
+            habits: vec![habit],
+        };
+
+        let result = habit_store.delete_completion("exercise", today);
+
+        assert!(matches!(result, Err(HabitError::CompletionNotFound(_))));
     }
 }
