@@ -18,7 +18,7 @@ pub enum AppError {
     Storage(#[from] StorageError),
     #[error("invalid request body")]
     InvalidJson(#[from] JsonRejection),
-    #[error("error: {0}")]
+    #[error("{0}")]
     InvalidInput(String),
 }
 
@@ -47,6 +47,6 @@ impl IntoResponse for AppError {
             }
         };
 
-        (status, Json(json!({ "error": message }))).into_response()
+        (status, Json(json!({ "message": message }))).into_response()
     }
 }

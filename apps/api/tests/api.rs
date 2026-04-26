@@ -10,6 +10,7 @@ use std::sync::{Arc, RwLock};
 use tempfile::NamedTempFile;
 use tower::ServiceExt;
 
+use api::error::AppError;
 use api::habit::{Habit, HabitError, HabitStore};
 use api::storage::Storage;
 
@@ -42,7 +43,17 @@ async fn test_get_habits_returns_habit_list() {
 
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
-    assert_eq!(body, json!([{"name": "exercise", "streak": 1}]));
+
+    let today_str = today.format("%Y-%m-%d").to_string();
+    assert_eq!(body[0]["name"].as_str().unwrap(), "exercise");
+    assert_eq!(body[0]["streak"].as_u64().unwrap(), 1);
+    assert!(
+        body[0]["completions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|d| d.as_str().unwrap() == today_str)
+    );
 }
 
 #[tokio::test]
@@ -59,7 +70,8 @@ async fn test_get_habits_returns_empty_list() {
 
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
-    assert_eq!(body, json!([]));
+
+    assert!(body.as_array().unwrap().is_empty());
 }
 
 #[tokio::test]
@@ -89,7 +101,9 @@ async fn test_add_new_habit() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(body, json!( {"name": "floss", "streak": 0}));
+    assert_eq!(body["name"].as_str().unwrap(), "floss");
+    assert_eq!(body["streak"].as_u64().unwrap(), 0);
+    assert!(body["completions"].as_array().unwrap().is_empty());
 }
 
 #[tokio::test]
@@ -118,14 +132,13 @@ async fn test_duplicate_habit_returns_conflict() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(
-        body,
-        json!({"error": HabitError::DuplicateHabit("exercise".to_string()).to_string()})
-    );
+    let expected_message = HabitError::DuplicateHabit("exercise".to_string()).to_string();
+    assert_eq!(body["message"].as_str().unwrap(), expected_message);
 }
 
 #[tokio::test]
 async fn test_complete_habit() {
+    let today: NaiveDate = Local::now().date_naive();
     let habits = vec![Habit {
         name: "exercise".to_string(),
         completions: vec![],
@@ -146,7 +159,40 @@ async fn test_complete_habit() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(body, json!({"name": "exercise", "streak": 1}));
+    let today_str = today.format("%Y-%m-%d").to_string();
+
+    assert_eq!(body["name"].as_str().unwrap(), "exercise");
+    assert_eq!(body["streak"].as_u64().unwrap(), 1);
+    assert!(
+        body["completions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|d| d.as_str().unwrap() == today_str)
+    );
+}
+
+#[tokio::test]
+async fn test_get_habits_returns_empty_completions() {
+    let habits = vec![Habit {
+        name: "exercise".to_string(),
+        completions: vec![],
+    }];
+    let (app, _file) = setup_app(habits).await;
+
+    let response = app
+        .oneshot(Request::get("/habits").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Value = serde_json::from_slice(&body).unwrap();
+
+    assert_eq!(body[0]["name"].as_str().unwrap(), "exercise");
+    assert_eq!(body[0]["streak"].as_u64().unwrap(), 0);
+    assert!(body[0]["completions"].as_array().unwrap().is_empty());
 }
 
 #[tokio::test]
@@ -168,10 +214,8 @@ async fn test_complete_non_existent_habit() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(
-        body,
-        json!({"error": HabitError::HabitNotFound("exercise".to_string()).to_string()})
-    );
+    let expected_message = HabitError::HabitNotFound("exercise".to_string()).to_string();
+    assert_eq!(body["message"].as_str().unwrap(), expected_message);
 }
 
 #[tokio::test]
@@ -198,10 +242,8 @@ async fn test_complete_habit_twice_returns_error() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(
-        body,
-        json!({"error": HabitError::DuplicateCompletion("exercise".to_string()).to_string()})
-    );
+    let expected_message = HabitError::DuplicateCompletion("exercise".to_string()).to_string();
+    assert_eq!(body["message"].as_str().unwrap(), expected_message);
 }
 
 #[tokio::test]
@@ -223,7 +265,7 @@ async fn test_malformed_json_returns_error() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(body, json!({"error": "invalid request body"}));
+    assert_eq!(body["message"].as_str().unwrap(), "invalid request body");
 }
 
 #[tokio::test]
@@ -247,10 +289,9 @@ async fn test_empty_habit_name_returns_error() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(
-        body,
-        json!({"error": "error: name must not be empty or whitespace"})
-    );
+    let expected_message =
+        AppError::InvalidInput("name must not be empty or whitespace".to_string()).to_string();
+    assert_eq!(body["message"].as_str().unwrap(), expected_message);
 }
 
 #[tokio::test]
@@ -274,8 +315,7 @@ async fn test_whitespace_habit_name_returns_error() {
     let body = response.into_body().collect().await.unwrap().to_bytes();
     let body: Value = serde_json::from_slice(&body).unwrap();
 
-    assert_eq!(
-        body,
-        json!({"error": "error: name must not be empty or whitespace"})
-    );
+    let expected_message =
+        AppError::InvalidInput("name must not be empty or whitespace".to_string()).to_string();
+    assert_eq!(body["message"].as_str().unwrap(), expected_message);
 }

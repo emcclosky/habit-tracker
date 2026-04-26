@@ -8,7 +8,7 @@ pub struct HabitStore {
 }
 
 impl HabitStore {
-    pub fn add_habit(&mut self, habit_name: &str) -> Result<(), HabitError> {
+    pub fn add_habit(&mut self, habit_name: &str) -> Result<&mut Habit, HabitError> {
         if self.habits.iter().any(|h| h.name == habit_name) {
             return Err(HabitError::DuplicateHabit(habit_name.to_owned()));
         }
@@ -18,8 +18,10 @@ impl HabitStore {
         };
 
         self.habits.push(habit);
-
-        Ok(())
+        Ok(self
+            .habits
+            .last_mut()
+            .expect("habits vec cannot be empty after push"))
     }
 
     pub fn complete_habit(&mut self, habit_name: &str) -> Result<&mut Habit, HabitError> {
