@@ -49,6 +49,15 @@ pub fn add_habit(storage: &Storage, name: &str) -> Result<HabitResponse, AppErro
     Ok(habit_response)
 }
 
+pub fn delete_habit(storage: &Storage, name: &str) -> Result<(), AppError> {
+    let mut habit_store = storage.load_habits()?;
+
+    habit_store.delete_habit(name)?;
+    storage.save_habits(&habit_store)?;
+
+    Ok(())
+}
+
 pub fn complete_habit(
     storage: &Storage,
     name: &str,

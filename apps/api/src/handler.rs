@@ -46,6 +46,17 @@ pub async fn add_habit(
     Ok((StatusCode::CREATED, Json(habits)))
 }
 
+pub async fn delete_habit(
+    State(shared_state): State<SharedState>,
+    Path(name): Path<String>,
+) -> Result<impl IntoResponse, AppError> {
+    let name = name.trim().to_string();
+    let storage = shared_state.write().expect("habit store lock was poisoned");
+
+    service::delete_habit(&storage, &name)?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
 pub async fn complete_habit(
     State(shared_state): State<SharedState>,
     Path((name, date)): Path<(String, String)>,

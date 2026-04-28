@@ -107,6 +107,49 @@ async fn test_add_new_habit() {
 }
 
 #[tokio::test]
+async fn test_delete_habit() {
+    let habits = vec![Habit {
+        name: "exercise".to_string(),
+        completions: vec![],
+    }];
+    let (app, _file) = setup_app(habits).await;
+
+    let response = app
+        .oneshot(
+            Request::delete("/habits/exercise")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+}
+
+#[tokio::test]
+async fn test_delete_habit_not_found() {
+    let habits = vec![];
+    let (app, _file) = setup_app(habits).await;
+
+    let response = app
+        .oneshot(
+            Request::delete("/habits/exercise")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let body: Value = serde_json::from_slice(&body).unwrap();
+
+    let expected_message = HabitError::HabitNotFound("exercise".to_string()).to_string();
+    assert_eq!(body["message"].as_str().unwrap(), expected_message);
+}
+
+#[tokio::test]
 async fn test_duplicate_habit_returns_conflict() {
     let today: NaiveDate = Local::now().date_naive();
 

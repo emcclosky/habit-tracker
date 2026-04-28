@@ -24,6 +24,18 @@ impl HabitStore {
             .expect("habits vec cannot be empty after push"))
     }
 
+    pub fn delete_habit(&mut self, habit_name: &str) -> Result<(), HabitError> {
+        let index = self
+            .habits
+            .iter()
+            .position(|h| h.name == habit_name)
+            .ok_or_else(|| HabitError::HabitNotFound(habit_name.to_owned()))?;
+
+        self.habits.remove(index);
+
+        Ok(())
+    }
+
     pub fn complete_habit(
         &mut self,
         habit_name: &str,
@@ -220,6 +232,37 @@ mod tests {
 
         assert_eq!(habit_store.habits.len(), 1);
         assert_eq!(habit_store.habits[0].name, "exercise");
+    }
+
+    #[test]
+    fn test_delete_habit_from_store() {
+        let habit_1_name = String::from("floss");
+        let habit_2_name = String::from("exercise");
+
+        let habit_1 = Habit {
+            name: habit_1_name.clone(),
+            completions: vec![],
+        };
+        let habit_2 = Habit {
+            name: habit_2_name.clone(),
+            completions: vec![],
+        };
+
+        let mut habit_store = HabitStore {
+            habits: vec![habit_1, habit_2],
+        };
+
+        habit_store.delete_habit(&habit_1_name).unwrap();
+
+        assert_eq!(habit_store.habits.len(), 1);
+        assert_eq!(habit_store.habits[0].name, "exercise");
+    }
+
+    #[test]
+    fn test_delete_habit_returns_error_when_not_found() {
+        let mut habit_store = HabitStore { habits: vec![] };
+        let result = habit_store.delete_habit("exercise");
+        assert!(matches!(result, Err(HabitError::HabitNotFound(_))));
     }
 
     #[test]
