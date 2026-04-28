@@ -39,21 +39,33 @@ curl -X POST http://127.0.0.1:8080/habits \
   -d '{"name": "exercise"}'
 ```
 
+### Delete habit
+
+```sh
+curl -X DELETE http://127.0.0.1:8080/habits/exercise
+```
+
 ### Complete habit
 
 ```sh
-curl -X POST http://127.0.0.1:8080/habits/exercise/completions
+curl -X POST http://127.0.0.1:8080/habits/exercise/completions/2026-04-28
+```
+
+### Delete completion
+
+```sh
+curl -X DELETE http://127.0.0.1:8080/habits/exercise/completions/2026-04-28
 ```
 
 Habit names with spaces or special characters must be URL-encoded:
 
 ```sh
-curl -X POST http://127.0.0.1:8080/habits/walk%20the%20dog/completions
+curl -X POST http://127.0.0.1:8080/habits/walk%20the%20dog/completions/2026-04-28
 ```
 
 ## Data storage
 
-Habits are persisted to `habits.json` in `apps/api/`. File-based storage is intentional for this phase — Postgres is planned.
+Habits are persisted to habits.json at the monorepo root. This is a side effect of where the server process runs from, not a deliberate location choice. File-based storage is intentional for this phase — Postgres is planned.
 
 ## Tests
 
